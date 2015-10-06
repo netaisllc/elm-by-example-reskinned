@@ -7,7 +7,7 @@ This project serve two purposes:
 
 This projects is a single-page app implemented with Elm.
 
-You'll note it's not a very _good_ Elm app, rather it's a very _first_ Elm app.  So it is full of anti-patterns and confusing technique.  
+You'll note it's not a very _good_ Elm app, rather it's a very _first_ Elm app  chock full of anti-patterns and confused technique.  
 
 For that I apologize, but we are all beginners at the start, except for maybe EvanCz (the 'force' behind Elm lang).
 
