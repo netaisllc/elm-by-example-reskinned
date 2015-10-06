@@ -1,5 +1,5 @@
 # Reskinning Elm By Example
----
+
 This project serve two purposes:
 
 1. A decent test case for my personal exploration of the [Elm language](http://elm-lang.org)
