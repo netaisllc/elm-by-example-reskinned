@@ -2,16 +2,17 @@ module ByExample where
 
 import Debug
 
+import Anchor exposing ( anchor, anchors, AnchorModel )
 import Cards exposing ( cards )
 import Effects exposing ( Effects, Never )
-import Hero exposing( hero )
+import Hero exposing ( hero )
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Markdown
 import Signal exposing ( Signal, Address )
-import Topic exposing( TopicModel, topics )
+import Topic exposing ( TopicModel, topics )
 import Task
 
 
@@ -21,6 +22,8 @@ type alias Model =
     { anchors : List AnchorModel
     , content : Html
     , initDrawer : Bool
+    , nextResource : String
+    , prevResource : String
     , resource : String
     , showDrawer : Bool
     , showNext : Bool
@@ -28,12 +31,6 @@ type alias Model =
     , topics : List TopicModel
     }
 
-type alias AnchorModel =
-    { href : String
-    , target : String
-    , title : String
-    , text : String
-    }
 
 -- Initial model
 init : ( Model, Effects Action )
@@ -47,6 +44,8 @@ initialModel =
     { anchors = anchors
     , content = text ""
     , initDrawer = True
+    , nextResource = "content/requirements.md"
+    , prevResource = "content/2.md"
     , resource = "/"
     , showDrawer = False
     , showNext = True
@@ -54,43 +53,6 @@ initialModel =
     , topics = topics
     }
 
-
--- Anchor: Original source site
-anchorSourceSite : AnchorModel
-anchorSourceSite =
-    AnchorModel
-        "http://elm-by-example.org/"
-        "_blank"
-        "Source website (Grzegorz Balcerek)"
-        "Original Elm by Example"
-
-
--- Anchor: Elm-lang site
-anchorElmSite : AnchorModel
-anchorElmSite =
-    AnchorModel
-        "http://elm-lang.org/"
-        "_blank"
-        "Official Elm language website"
-        "Elm Language"
-
-
--- Toolbar's anchor collection
-anchors : List AnchorModel
-anchors =
-    [   anchorSourceSite
-    ,   anchorElmSite
-    ]
-
-
--- Toolbar's anchor constructor
-anchor : AnchorModel -> Html
-anchor model =
-    a   [ href      model.href
-        , target    model.target
-        , title     model.title
-        ]
-        [ text      model.text ]
 
 
 -- Some anchor tag options for Topics
@@ -158,16 +120,19 @@ update action model =
                 )
 
 
--- Store the requested resource and determine in-page navigation
 saveCall : Model -> String -> Model
 saveCall model resource =
+    -- Store the requested resource and determine in-page navigation
     { model
         | resource <- resource
         , showPrev <- ( setPrevNavigation resource )
     }
 
+
 setPrevNavigation : String -> Bool
 setPrevNavigation resource =
+    -- Never show PREV in-page nav link when the current page is
+    -- the Home page
     let
         home = "/"
         hidePrevious = False
@@ -204,7 +169,7 @@ appContainer address model =
             [ class "app-container" ]
             [ toolBar address model
             , drawer address model
-            , content model
+            , content address model
             ]
         ]
 
@@ -302,17 +267,17 @@ drawerTopics address model =
 
 -- CONTENT
 
-content: Model -> Html
-content model =
+content : Address Action -> Model -> Html
+content address model =
     let
         home = "/"
     in
-        if model.resource == home then initialContent model
-        else page model
+        if model.resource == home then initialContent address model
+        else page address model
 
 
-initialContent : Model -> Html
-initialContent model =
+initialContent : Address Action -> Model -> Html
+initialContent address model =
     div
         [ classList
             [ ( "content", True )
@@ -323,12 +288,12 @@ initialContent model =
         ]
         [ hero
         , cards
-        , navigation model
+        , navigation address model
     ]
 
 
-page : Model -> Html
-page model =
+page : Address Action -> Model -> Html
+page address model =
     let
         markup = model.content
     in
@@ -339,13 +304,14 @@ page model =
             ]
         ]
         [ markup
-        , navigation model ]
+        , navigation address model ]
 
 
 -- NAVIGATION
 
-navigation : Model -> Html
-navigation model =
+navigation : Address Action -> Model -> Html
+navigation address model =
+    -- Render up to two in-page navigation links
     let
         showNext = model.showNext
         showPrev = model.showPrev
@@ -359,6 +325,7 @@ navigation model =
                     , ( "hidden", not ( showPrev )  )
                     , ( "white", True)
                     ]
+                , onClick address ( CallTopic model.prevResource )
                 ] []
             , button
                 [ classList
@@ -368,6 +335,7 @@ navigation model =
                     , ( "hidden", not ( showNext ) )
                     , ( "white", True)
                     ]
+                , onClick address ( CallTopic model.nextResource )
                 ] []
         ]
 
